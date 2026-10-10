@@ -3,7 +3,7 @@ import AuthPage from "./pages/AuthPage.jsx";
 import OfficeSimulationPage from "./pages/OfficeSimulationPage.jsx";
 import { PxButton } from "./atoms/index.jsx";
 
-const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:4000/api";
+const API_BASE = "https://aiverse-yicr.onrender.com/api";
 
 function Gate() {
   const { status, user, retry } = useAuth();
