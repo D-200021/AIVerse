@@ -39,6 +39,8 @@ app.use(
 );
 app.use(express.json({ limit: "50kb" }));
 
+app.enable('trust proxy', 1);
+
 app.get("/api/health", (req, res) => res.json({ ok: true, ai: aiStatus() }));
 app.use("/api/auth", authRoutes);
 // Everything below is private to the signed-in user.
