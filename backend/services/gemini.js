@@ -76,9 +76,9 @@ ${rosterText}
 Decide how to handle it, then respond with ONLY a JSON object matching the required schema — no markdown, no extra commentary.`;
 }
 
-async function routeWithGemini(message, roster) {
+async function routeWithGemini(message, roster, apiKey) {
   const { json, provider } = await generate({
-    prompt: buildRoutePrompt(message, roster), schema: buildRouteSchema(roster), temperature: 0.7,
+    prompt: buildRoutePrompt(message, roster), schema: buildRouteSchema(roster), temperature: 0.7, apiKey,
   });
   const result = sanitizeRoute(json, roster);
   result.source = provider;
@@ -124,10 +124,10 @@ function routeWithKeywords(message, roster) {
   return { isMeeting: false, employeeId: null, reply: "Got it — I'll get someone on this right away.", title, source: "keyword-fallback" };
 }
 
-async function routeMessage(message, rosterInput) {
+async function routeMessage(message, rosterInput, apiKey) {
   const roster = normalizeRoster(rosterInput);
   try {
-    return await routeWithGemini(message, roster);
+    return await routeWithGemini(message, roster, apiKey);
   } catch (err) {
     console.warn("[gemini] routing failed, using keyword fallback:", err.message);
     return routeWithKeywords(message, roster);
@@ -193,12 +193,12 @@ Decide whether it's good enough to approve, or whether it needs another pass. Ap
 }
 
 async function generateEmployeeOutput(params) {
-  const { text, provider } = await generate({ prompt: buildOutputPrompt(params), temperature: 0.4, maxTokens: 4096 });
+  const { text, provider } = await generate({ prompt: buildOutputPrompt(params), temperature: 0.4, maxTokens: 4096, apiKey: params.apiKey });
   return { output: text, provider };
 }
 
 async function getCeoReview(params) {
-  const { json } = await generate({ prompt: buildReviewPrompt(params), schema: REVIEW_SCHEMA, temperature: 0.6, maxTokens: 512 });
+  const { json } = await generate({ prompt: buildReviewPrompt(params), schema: REVIEW_SCHEMA, temperature: 0.6, maxTokens: 512, apiKey: params.apiKey });
   return {
     approved: !!json.approved,
     feedback: String(json.feedback || "").trim() || (json.approved ? "Nice work — approved." : "Needs another pass."),
@@ -209,19 +209,19 @@ function fallbackOutput({ employeeId, title, roster }) {
   const emp = findEmployee(roster, employeeId);
   const name = emp ? emp.name : "The team";
   return `⚠ ${name} could not produce a real result for "${title}" because the AI service (Gemini) is unavailable. ` +
-    "Set GEMINI_API_KEY in backend/.env, restart the server, then use \"revise\" to have the work redone.";
+    "Check your Gemini API key (menu → Gemini key), then use \"revise\" to have the work redone.";
 }
 
 // reviewTaskOutput() is the single entry point the /api/tasks/review route
 // calls — it runs the employee-output step, then (if that succeeded via
 // Gemini) the CEO-review step, and always returns a usable result even if
 // Gemini is unavailable at either stage.
-async function reviewTaskOutput({ employeeId, title, request, revisionNotes, previousOutput, roster: rosterInput }) {
+async function reviewTaskOutput({ employeeId, title, request, revisionNotes, previousOutput, roster: rosterInput, apiKey }) {
   const roster = normalizeRoster(rosterInput);
   let output;
   let source;
   try {
-    const res = await generateEmployeeOutput({ employeeId, title, request, revisionNotes, previousOutput, roster });
+    const res = await generateEmployeeOutput({ employeeId, title, request, revisionNotes, previousOutput, roster, apiKey });
     output = res.output;
     source = res.provider; // "gemini"
   } catch (err) {
@@ -233,7 +233,7 @@ async function reviewTaskOutput({ employeeId, title, request, revisionNotes, pre
   let review;
   if (source !== "keyword-fallback") {
     try {
-      review = await getCeoReview({ employeeId, title, request, output, roster });
+      review = await getCeoReview({ employeeId, title, request, output, roster, apiKey });
     } catch (err) {
       console.warn("[llm] CEO review failed on every provider:", err.message);
       review = { approved: true, feedback: "Nice work — approved." };

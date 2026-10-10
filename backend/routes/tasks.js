@@ -36,6 +36,7 @@ router.post("/review", async (req, res) => {
       revisionNotes: revisionNotes ? revisionNotes.trim().slice(0, 400) : null,
       previousOutput: typeof previousOutput === "string" ? previousOutput.slice(0, 6000) : null,
       roster,
+      apiKey: req.geminiKey,
     });
     res.json(result);
   } catch (err) {

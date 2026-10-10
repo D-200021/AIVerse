@@ -1,4 +1,3 @@
-import "pixi.js/unsafe-eval";
 import { Application, Container, Graphics, Text } from "pixi.js";
 import { TILE as T, W, H, ROOMS, meetingSeats, MEET_HEAD, CEO_DESK, MEET_TABLE, COFFEE_MACHINE, BREAK_TABLE, CEO_SEAT, deskLayout } from "../sim/layout.js";
 import * as A from "./art.js";

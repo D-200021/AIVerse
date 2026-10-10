@@ -12,6 +12,8 @@ import logRoutes from "./routes/logs.js";
 import ceoRoutes from "./routes/ceo.js";
 import taskRoutes from "./routes/tasks.js";
 import employeeRoutes from "./routes/employees.js";
+import authRoutes from "./routes/auth.js";
+import { requireAuth } from "./middleware/auth.js";
 import rateLimit from "express-rate-limit";
 import path from "node:path";
 
@@ -21,28 +23,30 @@ const limiter = rateLimit({
   max: 100, // limit each IP to 100 requests per windowMs
   message: "Too many requests from this IP, please try again later.",
 });
-const PORT = process.env.PORT || 4000;
 const __dirname = path.resolve();
+const PORT = process.env.PORT || 4000;
 
+app.use(limiter);
+app.use(helmet());
 app.use((req, res, next) => {
   res.removeHeader("x-powered-by");
   next();
 });
-app.use(helmet());
-app.use(limiter);
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || "*", // lock this down to your frontend's URL in production
+    origin: process.env.CORS_ORIGIN || "http://localhost:5173",
   })
 );
 app.use(express.json({ limit: "50kb" }));
 
 app.get("/api/health", (req, res) => res.json({ ok: true, ai: aiStatus() }));
-app.use("/api/chat", chatRoutes);
-app.use("/api/logs", logRoutes);
-app.use("/api/ceo", ceoRoutes);
-app.use("/api/tasks", taskRoutes);
-app.use("/api/employees", employeeRoutes);
+app.use("/api/auth", authRoutes);
+// Everything below is private to the signed-in user.
+app.use("/api/chat", requireAuth, chatRoutes);
+app.use("/api/logs", requireAuth, logRoutes);
+app.use("/api/ceo", requireAuth, ceoRoutes);
+app.use("/api/tasks", requireAuth, taskRoutes);
+app.use("/api/employees", requireAuth, employeeRoutes);
 
 // Fallback error handler for anything that slips past route-level try/catch.
 app.use((err, req, res, next) => {
@@ -57,7 +61,6 @@ app.use((req, res) => {
     path.join(__dirname, "frontend", "dist", "index.html")
   );
 });
-
 
 async function start() {
   await connectDB();

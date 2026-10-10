@@ -7,7 +7,7 @@ const router = express.Router();
 // Returns the most recent N entries, newest first (matches the sidebar's log order).
 router.get("/", async (req, res) => {
   try {
-    const room = req.query.room || "default";
+    const room = req.userRoom;
     const limit = Math.min(parseInt(req.query.limit, 10) || 8, 200);
 
     const logs = await EventLog.find({ room })
@@ -25,7 +25,8 @@ router.get("/", async (req, res) => {
 // POST /api/logs  { text: string, room?: string }
 router.post("/", async (req, res) => {
   try {
-    const { text, room = "default" } = req.body || {};
+    const { text } = req.body || {};
+    const room = req.userRoom;
 
     if (!text || typeof text !== "string" || !text.trim()) {
       return res.status(400).json({ error: "text is required." });

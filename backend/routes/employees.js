@@ -42,7 +42,7 @@ function slugify(name) {
 // GET /api/employees?room=default
 router.get("/", async (req, res) => {
   try {
-    const room = req.query.room || "default";
+    const room = req.userRoom;
     const employees = await Employee.find({ room }).sort({ order: 1, createdAt: 1 }).lean();
     res.json({ employees });
   } catch (err) {
@@ -58,7 +58,7 @@ router.get("/", async (req, res) => {
 // explicit ids (emma/john/raj/alex/mia) so they stay stable across reloads.
 router.post("/", async (req, res) => {
   try {
-    const room = req.body.room || "default";
+    const room = req.userRoom;
     const err = validateFields(req.body);
     if (err) return res.status(400).json({ error: err });
 
@@ -94,7 +94,7 @@ router.post("/", async (req, res) => {
 // or care whether this is the first edit.
 router.put("/:employeeId", async (req, res) => {
   try {
-    const room = req.body.room || "default";
+    const room = req.userRoom;
     const { employeeId } = req.params;
     const err = validateFields(req.body, { partial: true });
     if (err) return res.status(400).json({ error: err });
@@ -130,7 +130,7 @@ router.put("/:employeeId", async (req, res) => {
 // DELETE /api/employees/:employeeId?room=default
 router.delete("/:employeeId", async (req, res) => {
   try {
-    const room = req.query.room || "default";
+    const room = req.userRoom;
     await Employee.deleteOne({ room, employeeId: req.params.employeeId });
     res.json({ ok: true });
   } catch (err) {

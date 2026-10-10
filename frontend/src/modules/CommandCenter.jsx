@@ -11,14 +11,14 @@ import AgentsTab from "./tabs/AgentsTab.jsx";
 
 const TABS = ["chat", "tasks", "ask me", "outputs", "inbox", "memory", "activity", "agents"];
 
-export default function CommandCenter({ engine, snap, selectedId, onSelect, onEdit, onAdd }) {
+export default function CommandCenter({ engine, snap, selectedId, onSelect, onEdit, onAdd, openIde }) {
   const [tab, setTab] = useState("chat");
   const [seen, setSeen] = useState(() => new Set());
   const outIds = snap.tasks.filter((t) => t.output || t.status === "ceo-review").map((t) => t.id);
   useEffect(() => { if (tab === "outputs") setSeen(new Set(outIds)); }, [tab, outIds.join(",")]);
   const unseen = tab === "outputs" ? 0 : outIds.filter((id) => !seen.has(id)).length;
   const pending = snap.tasks.filter((t) => t.status === "user-review").length;
-  const props = { goTab: setTab, engine, snap, selectedId, onSelect, onEdit, onAdd };
+  const props = { openIde, goTab: setTab, engine, snap, selectedId, onSelect, onEdit, onAdd };
   return (
     <aside className="px-panel w-full lg:w-[430px] shrink-0 flex flex-col min-h-0 h-[520px] lg:h-auto">
       <div className="flex items-center gap-2 p-2 border-b-2 border-ink">

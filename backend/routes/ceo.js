@@ -19,7 +19,7 @@ router.post("/route", async (req, res) => {
       return res.status(400).json({ error: "text must be 500 characters or fewer." });
     }
 
-    const decision = await routeMessage(text.trim(), roster);
+    const decision = await routeMessage(text.trim(), roster, req.geminiKey);
     res.json(decision);
   } catch (err) {
     console.error("[ceo] route failed:", err.message);

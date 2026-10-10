@@ -7,7 +7,7 @@ const router = express.Router();
 // Returns chat history, oldest first, ready to drop straight into the UI.
 router.get("/", async (req, res) => {
   try {
-    const room = req.query.room || "default";
+    const room = req.userRoom;
     const limit = Math.min(parseInt(req.query.limit, 10) || 200, 500);
 
     const messages = await ChatMessage.find({ room })
@@ -25,7 +25,8 @@ router.get("/", async (req, res) => {
 // POST /api/chat  { sender: "user" | "ceo", text: string, room?: string }
 router.post("/", async (req, res) => {
   try {
-    const { sender, text, room = "default" } = req.body || {};
+    const { sender, text } = req.body || {};
+    const room = req.userRoom;
 
     if (!sender || !["user", "ceo"].includes(sender)) {
       return res.status(400).json({ error: "sender must be 'user' or 'ceo'." });
@@ -48,7 +49,7 @@ router.post("/", async (req, res) => {
 // DELETE /api/chat?room=default — clears history for a room (e.g. a "reset" button).
 router.delete("/", async (req, res) => {
   try {
-    const room = req.query.room || "default";
+    const room = req.userRoom;
     await ChatMessage.deleteMany({ room });
     res.json({ ok: true });
   } catch (err) {

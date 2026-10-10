@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { PxButton, PxChip, Portrait } from "../../atoms/index.jsx";
 import Markdown from "../../atoms/Markdown.jsx";
+import { hasCode } from "../../lib/codeBlocks.js";
 
 const STATE = { "user-review": ["#ff6b6b", "needs your OK"], "ceo-review": ["#6c8ef5", "CEO reviewing"], done: ["#6bcf7f", "approved"], "in-progress": ["#ffd93d", "revising"] };
 
-export default function OutputsTab({ snap }) {
+export default function OutputsTab({ snap, openIde }) {
   const [open, setOpen] = useState(null);
   const [copied, setCopied] = useState(null);
   const [filter, setFilter] = useState("all");
@@ -41,6 +42,7 @@ export default function OutputsTab({ snap }) {
             {t.ceoFeedback && isOpen && <div className="text-[13px] text-ink5">CEO: “{t.ceoFeedback}”</div>}
             <div className="flex gap-1">
               <PxButton onClick={() => setOpen(isOpen ? null : t.id)}>{isOpen ? "collapse" : "read full"}</PxButton>
+              {hasCode(t.output) && <PxButton variant="primary" onClick={() => openIde(t)}>{"</>"} open in IDE</PxButton>}
               <PxButton onClick={() => copy(t, a)}>{copied === t.id ? "copied ✓" : "copy all"}</PxButton>
               <PxButton onClick={() => download(t, a)}>.md</PxButton>
             </div>

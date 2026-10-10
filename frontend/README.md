@@ -21,13 +21,23 @@ procedurally and the AI layer is your own Node + Gemini backend.
 - Auto mode (top bar): finished work is approved automatically.
 - Random idle behaviour for employees only (the CEO stays put).
 
+## Accounts (sign in / sign up / forgot password)
+- Sign up asks for name, email, password and **your own Google Gemini API key** (get one free at https://aistudio.google.com/apikey). The key is validated with Google and stored **encrypted** (AES-256-GCM) on the server.
+- Every user gets a private office: agents, tasks and logs are partitioned per account. The room is derived from the login token, never from the client.
+- Forgot password: emails a single-use link (valid 1 hour). Without SMTP configured, the link is printed in the backend log and returned to the UI in development so you can still test it.
+- Change your key any time: user menu (top right) -> "Gemini API key...".
+
+## Code IDE (Monaco)
+When an agent's output contains code, an **open in IDE** button appears (Outputs / Ask me tabs, plus a toast). It opens a right-hand editor drawer with one tab per file, run (JavaScript, sandboxed, console output), copy, download, rename, reset and new file. Monaco is bundled locally (no CDN) and lazy-loaded. Edits are kept per task.
+
 ## Run
 ```bash
-cd backend && npm install && npm start      # needs MongoDB + GEMINI_API_KEY (.env.example)
-cd vite-office && npm install && npm run dev # http://localhost:5173
+cd backend && cp .env.example .env && npm install && npm start   # needs MongoDB; set APP_SECRET
+cd vite-office && npm install && npm run dev                      # http://localhost:5173
 ```
-Without a backend the app runs local-only with keyword routing. API base: `src/App.jsx`.
+Frontend API base: `VITE_API_BASE` (default `http://localhost:4000/api`). The backend is required to sign in.
 
-## AI (backend)
-Powered by Google Gemini (`GEMINI_API_KEY`, optional `GEMINI_MODEL`). The backend is ES modules
-(`"type": "module"`, `import`/`export`). `GET /api/health` shows whether Gemini is configured.
+## Backend (ES modules)
+Express + Mongoose + `@google/genai` (`GEMINI_MODEL`, default gemini-2.5-flash). There is no server-wide Gemini key: each request uses the signed-in user's key.
+Env: `MONGODB_URI`, `PORT`, `CORS_ORIGIN`, `APP_URL` (used in reset links), `APP_SECRET` (**required in production**; changing it makes stored Gemini keys unreadable), optional `SMTP_*` / `MAIL_FROM`. `npm test` runs the route tests.
+Note: the session token is kept in localStorage; serve over HTTPS in production.
