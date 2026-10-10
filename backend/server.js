@@ -13,6 +13,7 @@ import ceoRoutes from "./routes/ceo.js";
 import taskRoutes from "./routes/tasks.js";
 import employeeRoutes from "./routes/employees.js";
 import rateLimit from "express-rate-limit";
+import path from "node:path";
 
 const app = express();
 const limiter = rateLimit({
@@ -21,6 +22,7 @@ const limiter = rateLimit({
   message: "Too many requests from this IP, please try again later.",
 });
 const PORT = process.env.PORT || 4000;
+const __dirname = path.resolve();
 
 app.use((req, res, next) => {
   res.removeHeader("x-powered-by");
